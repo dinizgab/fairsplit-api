@@ -1,0 +1,39 @@
+networks:
+  db:
+services:
+  api:
+    container_name: faith-flow-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://postgres:db-pass@db/db-local
+      - DB_NAME=db-local
+      - DB_USER=postgres
+      - DB_HOST=db
+      - DB_PASS=db-pass
+      - DB_PORT=5432
+      - SERVER_PORT=8000
+    ports:
+      - 8000:8000
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    container_name: faith-flow-db
+    networks:
+        - db
+    image: postgres:alpine
+    environment:
+      POSTGRES_DB: db-local
+      POSTGRES_PASSWORD: db-pass
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d db-local -U postgres"]
+      interval: 3s
+      timeout: 5s
+      retries: 5
+    restart: always
